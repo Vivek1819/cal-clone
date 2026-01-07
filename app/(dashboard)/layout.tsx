@@ -17,7 +17,7 @@ export default function DashboardLayout({
       <aside className="w-64 bg-neutral-900 border-r border-neutral-800 px-3 py-4">
         {/* Brand */}
         <div className="px-4 mb-8">
-          <p className="text-base font-semibold tracking-tight">
+          <p className="text-base tracking-tight">
             Cal Clone
           </p>
         </div>
@@ -49,9 +49,7 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 px-12 py-10">
-        <div className="max-w-5xl">
           {children}
-        </div>
       </main>
     </div>
   );
