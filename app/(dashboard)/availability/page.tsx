@@ -1,10 +1,12 @@
-export default function AvailabilityPage() {
-  return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-xl font-semibold mb-2">Availability</h2>
-      <p className="text-sm text-gray-600">
-        Set when you are available for bookings.
-      </p>
-    </div>
-  );
+import { prisma } from "@/lib/prisma";
+import AvailabilityClient from "./AvailabilityClient";
+
+export default async function AvailabilityPage() {
+  const userId = "demo-user"; 
+
+  const availability = await prisma.availability.findUnique({
+    where: { userId },
+  });
+
+  return <AvailabilityClient availability={availability} userId={userId} />;
 }

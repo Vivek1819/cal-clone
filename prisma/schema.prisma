@@ -19,14 +19,6 @@ model EventType {
   createdAt   DateTime @default(now())
 }
 
-model Availability {
-  id        String @id @default(uuid())
-  dayOfWeek Int    // 0 = Sunday, 6 = Saturday
-  startTime String // "09:00"
-  endTime   String // "17:00"
-  timezone  String
-}
-
 model Booking {
   id          String   @id @default(uuid())
   name        String
@@ -40,4 +32,42 @@ model Booking {
   eventTypeId String
 
   createdAt   DateTime @default(now())
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+
+  timezone  String
+
+  sundayEnabled    Boolean
+  sundayStart      String?
+  sundayEnd        String?
+
+  mondayEnabled    Boolean
+  mondayStart      String?
+  mondayEnd        String?
+
+  tuesdayEnabled   Boolean
+  tuesdayStart     String?
+  tuesdayEnd       String?
+
+  wednesdayEnabled Boolean
+  wednesdayStart   String?
+  wednesdayEnd     String?
+
+  thursdayEnabled  Boolean
+  thursdayStart    String?
+  thursdayEnd      String?
+
+  fridayEnabled    Boolean
+  fridayStart      String?
+  fridayEnd        String?
+
+  saturdayEnabled  Boolean
+  saturdayStart    String?
+  saturdayEnd      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

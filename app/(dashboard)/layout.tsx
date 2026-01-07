@@ -18,7 +18,7 @@ export default function DashboardLayout({
         {/* Brand */}
         <div className="px-4 mb-8">
           <p className="text-base tracking-tight">
-            Cal Clone
+            Cal.com
           </p>
         </div>
 
