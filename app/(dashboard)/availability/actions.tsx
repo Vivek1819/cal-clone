@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getAvailability(userId: string) {
-  return prisma.availability.findUnique({
+  return prisma.availability.findFirst({
     where: { userId },
   });
 }
@@ -86,9 +86,18 @@ type SaveAvailabilityInput = {
 
 
 export async function saveAvailability(data: SaveAvailabilityInput) {
-  await prisma.availability.upsert({
+  const existing = await prisma.availability.findFirst({
     where: { userId: data.userId },
-    update: data,
-    create: data,
   });
+
+  if (existing) {
+    await prisma.availability.update({
+      where: { id: existing.id },
+      data,
+    });
+  } else {
+    await prisma.availability.create({
+      data,
+    });
+  }
 }
