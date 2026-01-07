@@ -32,8 +32,6 @@ function EventRow({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="w-9 h-5 rounded-full bg-neutral-700" />
-
         <button className="p-2 rounded-md border border-neutral-800 hover:bg-neutral-800 transition">
           <ExternalLink size={18} />
         </button>
