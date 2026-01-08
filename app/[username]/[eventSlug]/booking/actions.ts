@@ -5,34 +5,23 @@ import { prisma } from "@/lib/prisma";
 type CreateBookingInput = {
   name: string;
   email: string;
-  notes?: string;
-  date: Date;
+  date: string;        // YYYY-MM-DD
   startTime: string;
   endTime: string;
   eventTypeId: string;
 };
 
 export async function createBooking(input: CreateBookingInput) {
-  const {
-    name,
-    email,
-    notes,
-    date,
-    startTime,
-    endTime,
-    eventTypeId,
-  } = input;
+  const { name, email, date, startTime, endTime, eventTypeId } = input;
 
-  // 1️⃣ Basic validation
   if (!name || !email || !date || !startTime || !endTime || !eventTypeId) {
     throw new Error("Missing required booking fields");
   }
 
-  // 2️⃣ Prevent double booking
+  // ❗ TEMP: still scoped to eventType (we'll globalize next)
   const existingBooking = await prisma.booking.findFirst({
     where: {
-      eventTypeId,
-      date,
+      date,            // STRING
       startTime,
       status: "BOOKED",
     },
@@ -42,18 +31,15 @@ export async function createBooking(input: CreateBookingInput) {
     throw new Error("This time slot is already booked");
   }
 
-  // 3️⃣ Create booking
-  const booking = await prisma.booking.create({
+  return prisma.booking.create({
     data: {
       name,
       email,
-      date,
+      date,            // STRING
       startTime,
       endTime,
       status: "BOOKED",
       eventTypeId,
     },
   });
-
-  return booking;
 }

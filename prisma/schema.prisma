@@ -23,7 +23,7 @@ model Booking {
   id          String   @id @default(uuid())
   name        String
   email       String
-  date        DateTime
+  date        String
   startTime   String
   endTime     String
   status      String  

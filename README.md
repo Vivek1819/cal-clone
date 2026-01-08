@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cal.com Clone
 
-## Getting Started
+A simplified Cal.com-style scheduling application built with **Next.js (App Router)**, **Prisma**, and **PostgreSQL**.  
+The app allows users to create event types, define availability, share public booking links, accept bookings, and manage them via a dashboard.
 
-First, run the development server:
+## 🔗 Live Demo
+
+👉 https://cal-clone-nu.vercel.app/
+
+---
+
+## ✨ Features
+
+- Create and manage **event types** with custom durations
+- Define **weekly availability**
+- Public **booking page** (`/username/event-slug`)
+- Calendar-based date & time slot selection
+- Booking confirmation flow
+- Prevents **double booking per event**
+- **Bookings dashboard** with:
+  - Upcoming bookings
+  - Past bookings
+  - Cancelled bookings
+- Cancel bookings and update status
+- Clean Cal.com-inspired UI
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend & Backend**: Next.js 14 (App Router)
+- **Database ORM**: Prisma
+- **Database**: PostgreSQL
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **Deployment**: Vercel (recommended)
+
+---
+
+## ⚙️ Installation & Setup
+
+Follow these steps to run the project locally.
+
+---
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/your-username/cal-clone.git
+cd cal-clone
+
+````
+
+---
+
+### 2️⃣ Install dependencies
+
+```bash
+npm install
+```
+
+---
+
+### 3️⃣ Setup environment variables
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+```
+
+Example (local Postgres):
+
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/cal_clone"
+```
+
+---
+
+### 4️⃣ Setup the database
+
+Generate Prisma client:
+
+```bash
+npx prisma generate
+```
+
+Run migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+(Optional) Open Prisma Studio:
+
+```bash
+npx prisma studio
+```
+
+---
+
+### 5️⃣ Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app will be available at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧭 App Routes Overview
 
-To learn more about Next.js, take a look at the following resources:
+* `/` → Home
+* `/event-types` → Manage event types
+* `/availability` → Set weekly availability
+* `/dashboard/bookings` → Bookings dashboard
+* `/:username/:eventSlug` → Public booking page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📌 Assumptions
 
-## Deploy on Vercel
+* Single-user system (no authentication)
+* One availability configuration per user (to be extended to have multiple configurations)
+* All bookings are timezone-aware via stored timezone
+* Focus is on correctness and clarity over advanced edge cases
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚧 Current Status
+
+* Core functionality complete
+* UI closely inspired by Cal.com
+* Project structured for easy future enhancements
+

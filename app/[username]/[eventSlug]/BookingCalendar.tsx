@@ -33,8 +33,6 @@ function formatDateLabel(date: Date) {
   return `${weekday} ${day}`;
 }
 
-/* ------------------ types ------------------ */
-
 type Props = {
   username: string;
   eventType: {
@@ -49,8 +47,6 @@ type Props = {
   };
 };
 
-/* ------------------ component ------------------ */
-
 export default function BookingCalendar({
   username,
   eventType,
@@ -60,7 +56,6 @@ export default function BookingCalendar({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [use24h, setUse24h] = useState(false);
-  
 
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<{
@@ -113,10 +108,13 @@ export default function BookingCalendar({
             minute: "2-digit",
           });
 
+          const dateOnly = selectedDate!.toLocaleDateString("en-CA");
+
+
           await createBooking({
             name,
             email,
-            date: selectedDate!,
+            date: dateOnly,
             startTime,
             endTime: end.toLocaleTimeString("en-US", {
               hour: "2-digit",
