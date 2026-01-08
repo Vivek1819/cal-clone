@@ -43,3 +43,23 @@ export async function createBooking(input: CreateBookingInput) {
     },
   });
 }
+
+export async function getBookedSlotsForDate(input: {
+  date: string; // "YYYY-MM-DD"
+}) {
+  const { date } = input;
+
+  const bookings = await prisma.booking.findMany({
+    where: {
+      date,
+      status: "BOOKED", // important
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+    },
+  });
+
+  return bookings;
+}
+

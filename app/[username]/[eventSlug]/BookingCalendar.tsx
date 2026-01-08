@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import BookingForm from "./booking/BookingForm";
-import { createBooking } from "./booking/actions";
+import { createBooking, getBookedSlotsForDate } from "./booking/actions";
 import BookingConfirm from "./BookingConfirm";
 
 /* ------------------ helpers ------------------ */
@@ -64,6 +64,10 @@ export default function BookingCalendar({
     endTime: string;
   } | null>(null);
 
+  const [bookedSlots, setBookedSlots] = useState<
+    { startTime: string; endTime: string }[]
+  >([]);
+
   if (bookingConfirmed && bookingDetails && selectedDate && selectedTime) {
     return (
       <BookingConfirm
@@ -110,7 +114,6 @@ export default function BookingCalendar({
 
           const dateOnly = selectedDate!.toLocaleDateString("en-CA");
 
-
           await createBooking({
             name,
             email,
@@ -155,6 +158,11 @@ export default function BookingCalendar({
     return days;
   }
 
+  function toMinutes(time: string) {
+    const date = new Date(`1970-01-01 ${time}`);
+    return date.getHours() * 60 + date.getMinutes();
+  }
+
   function generateTimeSlots() {
     if (!selectedDate) return [];
 
@@ -192,6 +200,18 @@ export default function BookingCalendar({
 
   const days = getCalendarDays(currentMonth);
   const slots = generateTimeSlots();
+  const availableSlots = slots.filter((slot) => {
+    const slotStart = toMinutes(slot);
+    const slotEnd = slotStart + eventType.duration;
+
+    return !bookedSlots.some((booking) => {
+      const bookingStart = toMinutes(booking.startTime);
+      const bookingEnd = toMinutes(booking.endTime);
+
+      // overlap condition
+      return slotStart < bookingEnd && slotEnd > bookingStart;
+    });
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-neutral-100">
@@ -275,9 +295,15 @@ export default function BookingCalendar({
                 <button
                   key={idx}
                   disabled={!available}
-                  onClick={() => {
+                  onClick={async () => {
                     setSelectedDate(date);
                     setSelectedTime(null);
+
+                    const dateOnly = date.toLocaleDateString("en-CA");
+                    const booked = await getBookedSlotsForDate({
+                      date: dateOnly,
+                    });
+                    setBookedSlots(booked);
                   }}
                   className={`
                     h-16 w-full rounded-xl text-lg font-medium transition
@@ -330,7 +356,7 @@ export default function BookingCalendar({
             <div className="text-neutral-500 text-sm">Select a date first</div>
           ) : (
             <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-hide">
-              {slots.map((slot) => (
+              {availableSlots.map((slot) => (
                 <div
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
