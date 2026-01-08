@@ -2,7 +2,9 @@
 
 import { Video } from "lucide-react";
 import { cancelBooking } from "./actions";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+/* ------------------ Types ------------------ */
 
 type Booking = {
   id: string;
@@ -18,18 +20,44 @@ type Booking = {
   };
 };
 
-export default function BookingsClient({
-  bookings,
-  activeTab,
-}: {
-  bookings: Booking[];
-  activeTab: "upcoming" | "past" | "cancelled";
-}) {
-  const router = useRouter();
+type TabType = "UPCOMING" | "PAST" | "CANCELLED";
 
-  function goToTab(tab: "upcoming" | "past" | "cancelled") {
-    router.push(`/bookings?tab=${tab}`);
-  }
+function getBookingEndDateTime(booking: Booking) {
+  const date = new Date(booking.date);
+
+  const [time, meridian] = booking.endTime.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (meridian === "PM" && hours !== 12) hours += 12;
+  if (meridian === "AM" && hours === 12) hours = 0;
+
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
+
+
+export default function BookingsClient({ bookings }: { bookings: Booking[] }) {
+  const [tab, setTab] = useState<TabType>("UPCOMING");
+
+  const now = new Date();
+
+  const filteredBookings = bookings.filter((booking) => {
+    const endDateTime = getBookingEndDateTime(booking);
+
+    if (tab === "UPCOMING") {
+      return booking.status === "BOOKED" && endDateTime > now;
+    }
+
+    if (tab === "PAST") {
+      return booking.status === "BOOKED" && endDateTime <= now;
+    }
+
+    if (tab === "CANCELLED") {
+      return booking.status === "CANCELLED";
+    }
+
+    return false;
+  });
 
   return (
     <div className="p-10">
@@ -42,32 +70,32 @@ export default function BookingsClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-8">
         <Tab
           label="Upcoming"
-          active={activeTab === "upcoming"}
-          onClick={() => goToTab("upcoming")}
+          active={tab === "UPCOMING"}
+          onClick={() => setTab("UPCOMING")}
         />
         <Tab
           label="Past"
-          active={activeTab === "past"}
-          onClick={() => goToTab("past")}
+          active={tab === "PAST"}
+          onClick={() => setTab("PAST")}
         />
         <Tab
           label="Cancelled"
-          active={activeTab === "cancelled"}
-          onClick={() => goToTab("cancelled")}
+          active={tab === "CANCELLED"}
+          onClick={() => setTab("CANCELLED")}
         />
       </div>
 
       {/* List */}
       <div className="rounded-xl border border-neutral-800 bg-neutral-950">
-        {bookings.length === 0 ? (
+        {filteredBookings.length === 0 ? (
           <div className="p-12 text-sm text-neutral-400">
             No bookings found.
           </div>
         ) : (
-          bookings.map((booking) => (
+          filteredBookings.map((booking) => (
             <BookingRow key={booking.id} booking={booking} />
           ))
         )}
@@ -75,9 +103,6 @@ export default function BookingsClient({
     </div>
   );
 }
-
-/* ---------- UI ---------- */
-
 function Tab({
   label,
   active,
@@ -103,15 +128,18 @@ function Tab({
 
 function BookingRow({ booking }: { booking: Booking }) {
   const date = new Date(booking.date);
+  const endDateTime = getBookingEndDateTime(booking);
+  const isUpcoming = endDateTime > new Date();
 
   async function handleCancel() {
     if (!confirm("Cancel this booking?")) return;
     await cancelBooking(booking.id);
-    location.reload(); // ✅ forces server refetch
+    location.reload(); // simple + reliable
   }
 
   return (
     <div className="flex items-center justify-between px-8 py-6 border-b border-neutral-800 last:border-b-0">
+      {/* Left */}
       <div className="w-56">
         <div className="text-base font-medium text-neutral-100">
           {date.toLocaleDateString("en-US", {
@@ -129,23 +157,24 @@ function BookingRow({ booking }: { booking: Booking }) {
         </div>
       </div>
 
+      {/* Middle */}
       <div className="flex-1 px-6">
         <div className="text-base font-medium text-neutral-100">
           {booking.eventType.title}
         </div>
-        <div className="text-sm text-neutral-400">
-          You and {booking.name}
-        </div>
+        <div className="text-sm text-neutral-400">You and {booking.name}</div>
       </div>
 
-      {booking.status === "BOOKED" && (
-        <button
-          onClick={handleCancel}
-          className="text-sm px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition"
-        >
-          Cancel
-        </button>
-      )}
+      {/* Right */}
+      {booking.status === "BOOKED" &&
+        isUpcoming && (
+          <button
+            onClick={handleCancel}
+            className="text-sm px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 transition"
+          >
+            Cancel
+          </button>
+        )}
     </div>
   );
 }

@@ -2,32 +2,14 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function getBookings(status?: "BOOKED" | "CANCELLED" | "PAST") {
-  const now = new Date();
-
+export async function getBookings() {
   return prisma.booking.findMany({
-    where:
-      status === "CANCELLED"
-        ? { status: "CANCELLED" }
-        : status === "PAST"
-        ? { date: { lt: now }, status: "BOOKED" }
-        : { date: { gte: now }, status: "BOOKED" },
-
+    orderBy: { date: "asc" },
     include: {
-      eventType: {
-        select: {
-          title: true,
-          duration: true,
-        },
-      },
-    },
-    orderBy: {
-      date: "asc",
+      eventType: true,
     },
   });
 }
-
-
 
 export async function cancelBooking(id: string) {
   await prisma.booking.update({
