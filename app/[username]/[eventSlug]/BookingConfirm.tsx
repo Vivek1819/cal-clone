@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Props = {
   eventTitle: string;
@@ -25,10 +26,11 @@ export default function BookingConfirm({
   location = "Cal Video",
   onBackToBookings,
 }: Props) {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-black text-neutral-100 flex items-center justify-center px-4">
       <div className="w-full max-w-xl rounded-3xl border border-neutral-800 bg-neutral-950 shadow-2xl">
-
         {/* Header */}
         <div className="flex flex-col items-center text-center px-10 pt-10">
           <div className="h-12 w-16 rounded-full bg-emerald-500/15 flex items-center justify-center mb-4">
@@ -49,7 +51,6 @@ export default function BookingConfirm({
 
         {/* Details */}
         <div className="px-14 space-y-10 text-md">
-
           <DetailRow
             label="What"
             value={`${eventTitle} between ${hostName} and ${guestName}`}
@@ -64,7 +65,12 @@ export default function BookingConfirm({
             label="Who"
             value={
               <>
-                <div className="font-medium">{hostName} <span className="ml-2 text-xs bg-neutral-800 px-2 py-0.5 rounded">Host</span></div>
+                <div className="font-medium">
+                  {hostName}{" "}
+                  <span className="ml-2 text-xs bg-neutral-800 px-2 py-0.5 rounded">
+                    Host
+                  </span>
+                </div>
                 <div className="text-neutral-400">{guestEmail}</div>
 
                 <div className="mt-3 font-medium">{guestName}</div>
@@ -87,22 +93,26 @@ export default function BookingConfirm({
         <div className="my-8 border-t border-neutral-800" />
 
         {/* Footer */}
-        <div className="px-10 pb-8 text-sm flex items-center justify-center">
-          <div className="text-neutral-400">
+        {/* Footer */}
+        <div className="px-10 pb-10 text-sm flex flex-col items-center gap-6">
+          <div className="text-neutral-400 text-center">
             Need to make a change?{" "}
             <button className="underline hover:text-white">Reschedule</button>{" "}
-            or{" "}
-            <button className="underline hover:text-white">Cancel</button>
+            or <button className="underline hover:text-white">Cancel</button>
           </div>
 
-          {onBackToBookings && (
-            <button
-              onClick={onBackToBookings}
-              className="rounded-md border border-neutral-800 px-4 py-2 hover:bg-neutral-800 transition"
-            >
-              Back
-            </button>
-          )}
+          <button
+            onClick={() => router.push("/dashboard/bookings")}
+            className="
+      rounded-lg px-5 py-2.5
+      border border-neutral-800
+      text-neutral-200
+      hover:bg-neutral-800
+      transition
+    "
+          >
+            Back to bookings
+          </button>
         </div>
       </div>
     </div>

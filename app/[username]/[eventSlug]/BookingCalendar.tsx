@@ -60,6 +60,7 @@ export default function BookingCalendar({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [use24h, setUse24h] = useState(false);
+  
 
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<{
