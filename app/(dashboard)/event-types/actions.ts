@@ -7,6 +7,7 @@ export async function createEventType(data: {
   slug: string;
   description: string;
   duration: number;
+  buffer: number;
 }) {
   await prisma.eventType.create({
     data,
@@ -19,6 +20,7 @@ export async function updateEventType(data: {
   slug: string;
   description: string;
   duration: number;
+  buffer: number;
 }) {
   await prisma.eventType.update({
     where: { id: data.id },
@@ -27,6 +29,7 @@ export async function updateEventType(data: {
       slug: data.slug,
       description: data.description,
       duration: data.duration,
+      buffer: data.buffer,
     },
   });
 }

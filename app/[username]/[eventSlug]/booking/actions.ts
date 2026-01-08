@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 type CreateBookingInput = {
   name: string;
   email: string;
-  date: string;        // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   startTime: string;
   endTime: string;
   eventTypeId: string;
@@ -18,24 +18,52 @@ export async function createBooking(input: CreateBookingInput) {
     throw new Error("Missing required booking fields");
   }
 
-  // ❗ TEMP: still scoped to eventType (we'll globalize next)
-  const existingBooking = await prisma.booking.findFirst({
+  // Helper: convert "HH:MM AM/PM" → minutes since midnight
+  function toMinutes(time: string) {
+    const d = new Date(`1970-01-01 ${time}`);
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  const newStart = toMinutes(startTime);
+  const newEnd = toMinutes(endTime);
+
+  const existingBookings = await prisma.booking.findMany({
     where: {
-      date,            // STRING
-      startTime,
+      date,
       status: "BOOKED",
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+      eventType: {
+        select: {
+          buffer: true,
+        },
+      },
     },
   });
 
-  if (existingBooking) {
-    throw new Error("This time slot is already booked");
+  for (const booking of existingBookings) {
+    const buffer = booking.eventType.buffer ?? 0;
+
+    const bookingStart = toMinutes(booking.startTime) - buffer;
+
+    const bookingEnd = toMinutes(booking.endTime) + buffer;
+
+    const overlaps = newStart < bookingEnd && newEnd > bookingStart;
+
+    if (overlaps) {
+      throw new Error(
+        "This time overlaps with another booking (including buffer time)"
+      );
+    }
   }
 
   return prisma.booking.create({
     data: {
       name,
       email,
-      date,            // STRING
+      date,
       startTime,
       endTime,
       status: "BOOKED",
@@ -44,22 +72,21 @@ export async function createBooking(input: CreateBookingInput) {
   });
 }
 
-export async function getBookedSlotsForDate(input: {
-  date: string; // "YYYY-MM-DD"
-}) {
-  const { date } = input;
-
-  const bookings = await prisma.booking.findMany({
+export async function getBookedSlotsForDate(input: { date: string }) {
+  return prisma.booking.findMany({
     where: {
-      date,
-      status: "BOOKED", // important
+      date: input.date,
+      status: "BOOKED",
     },
     select: {
       startTime: true,
       endTime: true,
+      eventType: {
+        select: {
+          duration: true,
+          buffer: true,
+        },
+      },
     },
   });
-
-  return bookings;
 }
-

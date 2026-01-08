@@ -40,6 +40,7 @@ type Props = {
     title: string;
     duration: number;
     slug: string;
+    buffer: number;
   };
   availability: {
     timezone: string;
@@ -65,7 +66,14 @@ export default function BookingCalendar({
   } | null>(null);
 
   const [bookedSlots, setBookedSlots] = useState<
-    { startTime: string; endTime: string }[]
+    {
+      startTime: string;
+      endTime: string;
+      eventType: {
+        duration: number;
+        buffer: number;
+      };
+    }[]
   >([]);
 
   if (bookingConfirmed && bookingDetails && selectedDate && selectedTime) {
@@ -200,15 +208,18 @@ export default function BookingCalendar({
 
   const days = getCalendarDays(currentMonth);
   const slots = generateTimeSlots();
+
   const availableSlots = slots.filter((slot) => {
     const slotStart = toMinutes(slot);
     const slotEnd = slotStart + eventType.duration;
 
     return !bookedSlots.some((booking) => {
-      const bookingStart = toMinutes(booking.startTime);
-      const bookingEnd = toMinutes(booking.endTime);
+      const buffer = booking.eventType.buffer ?? 0;
 
-      // overlap condition
+      const bookingStart = toMinutes(booking.startTime) - buffer;
+
+      const bookingEnd = toMinutes(booking.endTime) + buffer;
+
       return slotStart < bookingEnd && slotEnd > bookingStart;
     });
   });

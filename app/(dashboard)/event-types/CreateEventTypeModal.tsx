@@ -19,6 +19,7 @@ export default function CreateEventTypeModal({
   const [description, setDescription] = useState("");
   const [slug, setSlug] = useState("");
   const [duration, setDuration] = useState(15);
+  const [buffer, setBuffer] = useState(0);
   const [slugEdited, setSlugEdited] = useState(false);
 
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function CreateEventTypeModal({
       slug,
       description,
       duration,
+      buffer
     });
 
     onClose();
@@ -88,7 +90,7 @@ export default function CreateEventTypeModal({
                 placeholder="quick-chat"
                 value={slug}
                 onChange={(e) => {
-                  setSlugEdited(true); 
+                  setSlugEdited(true);
                   setSlug(generateSlug(e.target.value));
                 }}
               />
@@ -120,6 +122,26 @@ export default function CreateEventTypeModal({
                   minutes
                 </span>
               </div>
+            </div>
+
+            {/* Buffer time */}
+            <div>
+              <label className="text-sm text-neutral-300">Buffer time</label>
+              <div className="relative mt-1">
+                <input
+                  type="number"
+                  min={0}
+                  className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 pr-16 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-700"
+                  value={buffer}
+                  onChange={(e) => setBuffer(Number(e.target.value))}
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-neutral-400">
+                  minutes
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-neutral-500">
+                Time blocked before and after each meeting
+              </p>
             </div>
           </div>
         </div>

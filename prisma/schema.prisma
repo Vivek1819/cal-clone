@@ -8,65 +8,66 @@ datasource db {
 }
 
 model EventType {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String?
   duration    Int
-  slug        String   @unique
+  buffer      Int     @default(0)
+  slug        String  @unique
 
-  bookings    Booking[]
+  bookings Booking[]
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Booking {
-  id          String   @id @default(uuid())
-  name        String
-  email       String
-  date        String
-  startTime   String
-  endTime     String
-  status      String  
+  id        String @id @default(uuid())
+  name      String
+  email     String
+  date      String
+  startTime String
+  endTime   String
+  status    String
 
   eventType   EventType @relation(fields: [eventTypeId], references: [id])
   eventTypeId String
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Availability {
-  id        String   @id @default(cuid())
-  userId    String   @unique
+  id     String @id @default(cuid())
+  userId String @unique
 
-  timezone  String
+  timezone String
 
-  sundayEnabled    Boolean
-  sundayStart      String?
-  sundayEnd        String?
+  sundayEnabled Boolean
+  sundayStart   String?
+  sundayEnd     String?
 
-  mondayEnabled    Boolean
-  mondayStart      String?
-  mondayEnd        String?
+  mondayEnabled Boolean
+  mondayStart   String?
+  mondayEnd     String?
 
-  tuesdayEnabled   Boolean
-  tuesdayStart     String?
-  tuesdayEnd       String?
+  tuesdayEnabled Boolean
+  tuesdayStart   String?
+  tuesdayEnd     String?
 
   wednesdayEnabled Boolean
   wednesdayStart   String?
   wednesdayEnd     String?
 
-  thursdayEnabled  Boolean
-  thursdayStart    String?
-  thursdayEnd      String?
+  thursdayEnabled Boolean
+  thursdayStart   String?
+  thursdayEnd     String?
 
-  fridayEnabled    Boolean
-  fridayStart      String?
-  fridayEnd        String?
+  fridayEnabled Boolean
+  fridayStart   String?
+  fridayEnd     String?
 
-  saturdayEnabled  Boolean
-  saturdayStart    String?
-  saturdayEnd      String?
+  saturdayEnabled Boolean
+  saturdayStart   String?
+  saturdayEnd     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
