@@ -26,7 +26,7 @@ model Booking {
   date        DateTime
   startTime   String
   endTime     String
-  status      String   // "BOOKED" | "CANCELLED"
+  status      String  
 
   eventType   EventType @relation(fields: [eventTypeId], references: [id])
   eventTypeId String

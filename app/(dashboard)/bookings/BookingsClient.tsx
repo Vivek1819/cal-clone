@@ -2,7 +2,8 @@
 
 import { Video } from "lucide-react";
 import { cancelBooking } from "./actions";
-import { useState } from "react";
+import { use, useState } from "react";
+import { useRouter } from "next/navigation";
 
 /* ------------------ Types ------------------ */
 
@@ -126,15 +127,18 @@ function Tab({
   );
 }
 
+
 function BookingRow({ booking }: { booking: Booking }) {
   const date = new Date(booking.date);
   const endDateTime = getBookingEndDateTime(booking);
   const isUpcoming = endDateTime > new Date();
 
+  const router = useRouter();
+
   async function handleCancel() {
     if (!confirm("Cancel this booking?")) return;
     await cancelBooking(booking.id);
-    location.reload(); // simple + reliable
+    router.refresh(); 
   }
 
   return (
