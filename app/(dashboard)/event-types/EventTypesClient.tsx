@@ -12,6 +12,7 @@ type EventType = {
   slug: string;
   description: string | null;
   duration: number;
+  buffer: number;
 };
 
 function EventRow({
