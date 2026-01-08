@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { saveAvailability } from "./actions";
+import { Globe, Check } from "lucide-react";
 
 type Availability = {
   userId: string;
@@ -37,13 +38,13 @@ type Availability = {
 };
 
 const DAYS = [
-  { key: "sunday", label: "Sunday" },
-  { key: "monday", label: "Monday" },
-  { key: "tuesday", label: "Tuesday" },
-  { key: "wednesday", label: "Wednesday" },
-  { key: "thursday", label: "Thursday" },
-  { key: "friday", label: "Friday" },
-  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday", short: "Sun" },
+  { key: "monday", label: "Monday", short: "Mon" },
+  { key: "tuesday", label: "Tuesday", short: "Tue" },
+  { key: "wednesday", label: "Wednesday", short: "Wed" },
+  { key: "thursday", label: "Thursday", short: "Thu" },
+  { key: "friday", label: "Friday", short: "Fri" },
+  { key: "saturday", label: "Saturday", short: "Sat" },
 ] as const;
 
 type Props = {
@@ -115,46 +116,59 @@ export default function AvailabilityClient({ userId, availability }: Props) {
   }
 
   return (
-    <div>
+    <div className="p-4 sm:p-6 lg:p-10">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-neutral-100">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-100">
             Availability
           </h1>
-          <p className="mt-2 text-base text-neutral-400">
-            Set when you are available for meetings.
+          <p className="mt-2 text-xs sm:text-sm text-neutral-400">
+            Set your weekly hours when you're available for meetings.
           </p>
         </div>
 
         <button
           onClick={handleSave}
           disabled={saving}
-          className="rounded-md bg-white px-5 py-2.5 text-base font-medium text-black hover:bg-neutral-200 disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 sm:px-5 py-2.5 text-sm sm:text-base font-semibold text-black hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-white/10 w-full sm:w-auto"
         >
-          {saving ? "Saving..." : "Save"}
+          {saving ? (
+            <>
+              <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Check size={18} />
+              <span>Save</span>
+            </>
+          )}
         </button>
       </div>
 
       {/* Timezone */}
-      <div className="mb-8">
-        <label className="text-base text-neutral-300">Timezone </label>
+      <div className="mb-6 sm:mb-8 bg-neutral-900/30 border border-neutral-800/50 rounded-xl p-5 sm:p-6 backdrop-blur-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <Globe className="w-4 h-4 text-neutral-400" />
+          <label className="text-sm font-medium text-neutral-300">Timezone</label>
+        </div>
         <select
           value={state.timezone}
           onChange={(e) =>
             setState((prev) => ({ ...prev, timezone: e.target.value }))
           }
-          className="mt-2 w-full max-w-sm rounded-md border border-neutral-800 bg-neutral-900 px-4 py-2.5 text-base text-neutral-100"
+          className="w-full sm:max-w-sm rounded-lg border border-neutral-700/50 bg-neutral-900/50 px-4 py-2.5 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
         >
-          <option value="Asia/Kolkata">Asia/Kolkata</option>
-          <option value="UTC">UTC</option>
-          <option value="America/New_York">America/New_York</option>
-          <option value="Europe/London">Europe/London</option>
+          <option value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</option>
+          <option value="UTC">UTC (GMT+0:00)</option>
+          <option value="America/New_York">America/New York (GMT-5:00)</option>
+          <option value="Europe/London">Europe/London (GMT+0:00)</option>
         </select>
       </div>
 
       {/* Days */}
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/40">
+      <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/30 backdrop-blur-sm overflow-hidden">
         {DAYS.map((day) => {
           const enabled =
             state[`${day.key}Enabled` as keyof Availability] as boolean;
@@ -166,50 +180,85 @@ export default function AvailabilityClient({ userId, availability }: Props) {
           return (
             <div
               key={day.key}
-              className="flex items-center justify-between border-b border-neutral-800 px-6 py-5 last:border-b-0"
+              className="border-b border-neutral-800/50 last:border-b-0 hover:bg-neutral-800/20 transition"
             >
-              <div className="flex items-center gap-5">
-                {/* Toggle */}
-                <button
-                  onClick={() => toggleDay(day.key)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition ${
-                    enabled ? "bg-white" : "bg-neutral-700"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-black transition ${
-                      enabled ? "translate-x-5.5" : "translate-x-0.75"
+              {/* Day row - always horizontal */}
+              <div className="flex items-center justify-between px-4 sm:px-6 py-5">
+                <div className="flex items-center gap-4 sm:gap-5">
+                  {/* Toggle */}
+                  <button
+                    onClick={() => toggleDay(day.key)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
+                      enabled ? "bg-emerald-500" : "bg-neutral-700"
                     }`}
-                  />
-                </button>
+                    aria-label={`Toggle ${day.label}`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                        enabled ? "translate-x-5.5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
 
-                <span className="text-base text-neutral-200">
-                  {day.label}
-                </span>
+                  <div>
+                    <div className="text-sm sm:text-base font-medium text-neutral-100">
+                      {day.label}
+                    </div>
+                    {!enabled && (
+                      <div className="text-xs text-neutral-500 mt-0.5">
+                        Unavailable
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Time inputs - visible on larger screens */}
+                {enabled ? (
+                  <div className="hidden md:flex items-center gap-3">
+                    <input
+                      type="time"
+                      value={start ?? "09:00"}
+                      onChange={(e) =>
+                        updateTime(day.key, "Start", e.target.value)
+                      }
+                      className="rounded-lg border border-neutral-700/50 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
+                    />
+                    <span className="text-sm text-neutral-500">–</span>
+                    <input
+                      type="time"
+                      value={end ?? "17:00"}
+                      onChange={(e) =>
+                        updateTime(day.key, "End", e.target.value)
+                      }
+                      className="rounded-lg border border-neutral-700/50 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-6 hidden md:block" />
+                )}
               </div>
 
-              {enabled ? (
-                <div className="flex items-center gap-3">
+              {/* Time inputs - stacked below on mobile/tablet */}
+              {enabled && (
+                <div className="flex md:hidden items-center gap-2 px-4 sm:px-6 pb-5">
                   <input
                     type="time"
                     value={start ?? "09:00"}
                     onChange={(e) =>
                       updateTime(day.key, "Start", e.target.value)
                     }
-                    className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-base text-neutral-100"
+                    className="flex-1 rounded-lg border border-neutral-700/50 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
                   />
-                  <span className="text-base text-neutral-400">–</span>
+                  <span className="text-sm text-neutral-500">–</span>
                   <input
                     type="time"
                     value={end ?? "17:00"}
                     onChange={(e) =>
                       updateTime(day.key, "End", e.target.value)
                     }
-                    className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-base text-neutral-100"
+                    className="flex-1 rounded-lg border border-neutral-700/50 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
                   />
                 </div>
-              ) : (
-                <div className="h-7" />
               )}
             </div>
           );

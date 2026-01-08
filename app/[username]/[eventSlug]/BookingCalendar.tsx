@@ -4,6 +4,7 @@ import { useState } from "react";
 import BookingForm from "./booking/BookingForm";
 import { createBooking, getBookedSlotsForDate } from "./booking/actions";
 import BookingConfirm from "./BookingConfirm";
+import { Clock, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 
 /* ------------------ helpers ------------------ */
 
@@ -225,35 +226,51 @@ export default function BookingCalendar({
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-neutral-100">
-      <div className="flex w-full max-w-7xl h-[600px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl">
-        {/* LEFT PANEL — 25% */}
-        <div className="w-1/4 border-r border-neutral-800 p-10 space-y-6">
-          <div className="text-sm text-neutral-400">{username}</div>
-
-          <h1 className="text-3xl font-semibold">{eventType.title}</h1>
-
-          <div className="text-sm text-neutral-400">
-            ⏱ {eventType.duration} min
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-neutral-950 to-black text-neutral-100 p-4">
+      <div className="flex flex-col lg:flex-row w-full max-w-7xl lg:h-[640px] rounded-xl border border-neutral-800/50 bg-neutral-950/80 backdrop-blur-sm shadow-2xl overflow-hidden">
+        {/* LEFT PANEL — Info section */}
+        <div className="w-full lg:w-1/4 border-b lg:border-b-0 lg:border-r border-neutral-800/50 p-6 lg:p-10 space-y-6 bg-neutral-900/30">
+          <div>
+            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Host</div>
+            <div className="text-base text-neutral-300">{username}</div>
           </div>
 
-          <div className="text-sm text-neutral-400">
-            🌍 {availability.timezone}
+          <div>
+            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Event Type</div>
+            <h1 className="text-xl lg:text-2xl font-semibold text-neutral-100">{eventType.title}</h1>
+          </div>
+
+          <div className="pt-4 space-y-4 border-t border-neutral-800/50">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+              <div>
+                <div className="text-xs text-neutral-500">Duration</div>
+                <div className="text-sm text-neutral-200">{eventType.duration} minutes</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Globe className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+              <div>
+                <div className="text-xs text-neutral-500">Timezone</div>
+                <div className="text-sm text-neutral-200">{availability.timezone}</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* CALENDAR — 50% */}
-        <div className="w-1/2 p-10 border-r border-neutral-800">
+        {/* CALENDAR — Main calendar section */}
+        <div className="w-full lg:w-1/2 p-6 lg:p-10 border-b lg:border-b-0 lg:border-r border-neutral-800/50 overflow-y-auto lg:overflow-visible">
           {/* Month Header */}
-          <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-2xl font-medium">
+          <div className="mb-6 lg:mb-8 flex items-center justify-between">
+            <h2 className="text-lg lg:text-xl font-semibold">
               {currentMonth.toLocaleString("default", {
                 month: "long",
                 year: "numeric",
               })}
-            </h1>
+            </h2>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() =>
                   setCurrentMonth(
@@ -264,9 +281,10 @@ export default function BookingCalendar({
                     )
                   )
                 }
-                className="px-4 py-2 rounded-lg border border-neutral-800 hover:bg-neutral-800"
+                className="p-2 rounded-lg border border-neutral-700/50 hover:bg-neutral-800/50 transition"
+                aria-label="Previous month"
               >
-                ←
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() =>
@@ -278,29 +296,31 @@ export default function BookingCalendar({
                     )
                   )
                 }
-                className="px-4 py-2 rounded-lg border border-neutral-800 hover:bg-neutral-800"
+                className="p-2 rounded-lg border border-neutral-700/50 hover:bg-neutral-800/50 transition"
+                aria-label="Next month"
               >
-                →
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           {/* Weekdays */}
-          <div className="grid grid-cols-7 gap-6 mb-4 text-sm text-neutral-400">
+          <div className="grid grid-cols-7 gap-2 lg:gap-4 mb-4 text-xs font-medium text-neutral-500">
             {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
-              <div key={d} className="text-center tracking-wide">
+              <div key={d} className="text-center tracking-wider">
                 {d}
               </div>
             ))}
           </div>
 
           {/* Days */}
-          <div className="grid grid-cols-7 gap-5">
+          <div className="grid grid-cols-7 gap-2 lg:gap-4">
             {days.map((date, idx) => {
               if (!date) return <div key={idx} />;
 
               const available = isDateAvailable(date);
               const selected = selectedDate && isSameDay(selectedDate, date);
+              const isToday = isSameDay(date, new Date());
 
               return (
                 <button
@@ -317,14 +337,15 @@ export default function BookingCalendar({
                     setBookedSlots(booked);
                   }}
                   className={`
-                    h-16 w-full rounded-xl text-lg font-medium transition
+                    h-12 sm:h-14 lg:h-14 w-full rounded-lg text-sm lg:text-base font-medium transition relative
                     ${
                       selected
-                        ? "bg-white text-black"
+                        ? "bg-white text-black shadow-lg"
                         : available
-                        ? "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                        : "bg-neutral-900 text-neutral-600 cursor-not-allowed"
+                        ? "bg-neutral-800/50 text-neutral-200 hover:bg-neutral-700/50 border border-neutral-700/30"
+                        : "bg-transparent text-neutral-700 cursor-not-allowed"
                     }
+                    ${isToday && !selected ? "ring-1 ring-neutral-600" : ""}
                   `}
                 >
                   {date.getDate()}
@@ -334,27 +355,27 @@ export default function BookingCalendar({
           </div>
         </div>
 
-        {/* TIME SLOTS — 25% */}
-        <div className="w-1/4 p-10 flex flex-col h-full">
+        {/* TIME SLOTS — Right panel */}
+        <div className="w-full lg:w-1/4 p-6 lg:p-10 flex flex-col max-h-[400px] lg:max-h-full lg:h-full">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between flex-shrink-0">
-            <div className="text-sm font-medium">
-              {selectedDate ? formatDateLabel(selectedDate) : "Select a time"}
+            <div className="text-sm font-semibold">
+              {selectedDate ? formatDateLabel(selectedDate) : "Select date"}
             </div>
 
-            <div className="inline-flex rounded-lg border border-neutral-800 overflow-hidden">
+            <div className="inline-flex rounded-lg border border-neutral-700/50 overflow-hidden bg-neutral-900/50">
               <button
                 onClick={() => setUse24h(false)}
-                className={`px-4 py-1 text-sm ${
-                  !use24h ? "bg-neutral-800" : "text-neutral-400"
+                className={`px-3 py-1 text-xs transition ${
+                  !use24h ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 12h
               </button>
               <button
                 onClick={() => setUse24h(true)}
-                className={`px-4 py-1 text-sm ${
-                  use24h ? "bg-neutral-800" : "text-neutral-400"
+                className={`px-3 py-1 text-xs transition ${
+                  use24h ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 24h
@@ -364,26 +385,32 @@ export default function BookingCalendar({
 
           {/* Scrollable slot list */}
           {!selectedDate ? (
-            <div className="text-neutral-500 text-sm">Select a date first</div>
+            <div className="flex items-center justify-center h-full text-sm text-neutral-500">
+              Select a date to see available times
+            </div>
+          ) : availableSlots.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-sm text-neutral-500">
+              No available times on this date
+            </div>
           ) : (
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto pr-2 space-y-2 scrollbar-hide">
               {availableSlots.map((slot) => (
-                <div
+                <button
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
                   className={`
-          flex items-center justify-center gap-3
-          rounded-lg border px-4 py-3 cursor-pointer transition
-          ${
-            selectedTime === slot
-              ? "border-white bg-neutral-800"
-              : "border-neutral-800 hover:border-neutral-600"
-          }
-        `}
+                    w-full flex items-center justify-center gap-2
+                    rounded-lg border px-4 py-3 cursor-pointer transition
+                    ${
+                      selectedTime === slot
+                        ? "border-white bg-white text-black shadow-lg"
+                        : "border-neutral-700/50 bg-neutral-800/30 hover:bg-neutral-700/50 hover:border-neutral-600"
+                    }
+                  `}
                 >
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  <span className="text-sm">{slot}</span>
-                </div>
+                  <span className={`h-1.5 w-1.5 rounded-full ${selectedTime === slot ? "bg-emerald-500" : "bg-emerald-400"}`} />
+                  <span className="text-sm font-medium">{slot}</span>
+                </button>
               ))}
             </div>
           )}
