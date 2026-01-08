@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import BookingForm from "./booking/BookingForm";
 
 /* ------------------ helpers ------------------ */
 
@@ -56,6 +57,24 @@ export default function BookingCalendar({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [use24h, setUse24h] = useState(false);
+
+  if (selectedDate && selectedTime) {
+    return (
+      <BookingForm
+        eventTitle={eventType.title}
+        duration={eventType.duration}
+        dateLabel={selectedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })}
+        timeLabel={selectedTime}
+        timezone={availability.timezone}
+        onBack={() => setSelectedTime(null)}
+      />
+    );
+  }
 
   function isDateAvailable(date: Date) {
     const dayKey = DAY_KEY_BY_INDEX[date.getDay()];
