@@ -11,7 +11,7 @@ type Booking = {
   id: string;
   name: string;
   email: string;
-  date: Date;
+  date: string;
   startTime: string;
   endTime: string;
   status: string;
