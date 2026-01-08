@@ -173,7 +173,69 @@ function BookingRow({
 
   return (
     <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/30 hover:border-neutral-700/50 transition-all duration-200 backdrop-blur-sm">
-      <div className="flex items-center gap-6 p-5 sm:p-6">
+      {/* Mobile & Tablet Layout */}
+      <div className="flex flex-col gap-4 p-4 sm:p-5 md:hidden">
+        {/* Top Row: Date Badge + Day/Time */}
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 rounded-md bg-neutral-800 border border-neutral-700/50 flex flex-col items-center justify-center">
+              <div className="text-[9px] font-medium text-neutral-400 uppercase tracking-wide">
+                {date.toLocaleDateString("en-US", { month: "short" })}
+              </div>
+              <div className="text-lg font-bold text-white leading-none mt-0.5">
+                {date.getDate()}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 space-y-1.5">
+            <div className="text-sm font-medium text-white">
+              {date.toLocaleDateString("en-US", { weekday: "long" })}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+              <Clock size={14} />
+              <span>{booking.startTime} – {booking.endTime}</span>
+            </div>
+            {booking.status === "BOOKED" && (
+              <a 
+                href="#"
+                className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                <Video size={14} />
+                <span>Join Cal Video</span>
+              </a>
+            )}
+          </div>
+
+          {booking.status === "BOOKED" && isUpcoming && (
+            <button
+              onClick={() => onCancel(booking.id)}
+              className="px-3 py-1.5 text-xs font-medium rounded-md border border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {/* Bottom Row: Event Details */}
+        <div className="flex items-start justify-between gap-4 pl-16">
+          <div className="flex-1 space-y-1">
+            <div className="text-sm font-medium text-white">
+              {booking.eventType.title}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-neutral-400">
+              <User size={14} />
+              <span>You and {booking.name}</span>
+            </div>
+          </div>
+          <div className="inline-block px-2 py-0.5 text-[11px] text-neutral-400 bg-neutral-800/50 border border-neutral-700/50 rounded whitespace-nowrap">
+            {booking.eventType.duration} min
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:flex items-center gap-6 p-5 lg:p-6">
         {/* Date Badge */}
         <div className="flex-shrink-0">
           <div className="w-14 h-14 rounded-md bg-neutral-800 border border-neutral-700/50 flex flex-col items-center justify-center">
@@ -187,7 +249,7 @@ function BookingRow({
         </div>
 
         {/* Left Section: Day, Time, and Video Link */}
-        <div className="flex-shrink-0 space-y-2">
+        <div className="flex-shrink-0 space-y-2 w-40">
           <div className="text-base font-medium text-white">
             {date.toLocaleDateString("en-US", { weekday: "long" })}
           </div>
