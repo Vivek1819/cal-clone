@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import BookingForm from "./booking/BookingForm";
+import { createBooking } from "./booking/actions";
+import BookingConfirm from "./BookingConfirm";
 
 /* ------------------ helpers ------------------ */
 
@@ -36,6 +38,7 @@ function formatDateLabel(date: Date) {
 type Props = {
   username: string;
   eventType: {
+    id: string;
     title: string;
     duration: number;
     slug: string;
@@ -58,9 +61,36 @@ export default function BookingCalendar({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [use24h, setUse24h] = useState(false);
 
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState<{
+    name: string;
+    email: string;
+    endTime: string;
+  } | null>(null);
+
+  if (bookingConfirmed && bookingDetails && selectedDate && selectedTime) {
+    return (
+      <BookingConfirm
+        eventTitle={eventType.title}
+        hostName={username}
+        guestName={bookingDetails.name}
+        guestEmail={bookingDetails.email}
+        dateLabel={selectedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })}
+        timeRange={`${selectedTime} – ${bookingDetails.endTime}`}
+        timezone={availability.timezone}
+      />
+    );
+  }
+
   if (selectedDate && selectedTime) {
     return (
       <BookingForm
+        username={username}
         eventTitle={eventType.title}
         duration={eventType.duration}
         dateLabel={selectedDate.toLocaleDateString("en-US", {
@@ -72,6 +102,30 @@ export default function BookingCalendar({
         timeLabel={selectedTime}
         timezone={availability.timezone}
         onBack={() => setSelectedTime(null)}
+        onConfirm={async ({ name, email }) => {
+          const startTime = selectedTime!;
+          const start = new Date(`1970-01-01 ${startTime}`);
+          const end = new Date(start);
+          end.setMinutes(end.getMinutes() + eventType.duration);
+          const endTime = end.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          await createBooking({
+            name,
+            email,
+            date: selectedDate!,
+            startTime,
+            endTime: end.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            eventTypeId: eventType.id,
+          });
+          setBookingDetails({ name, email, endTime });
+          setBookingConfirmed(true);
+        }}
       />
     );
   }

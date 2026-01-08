@@ -1,12 +1,20 @@
 "use client";
 
+import { useState } from "react";
+
 type Props = {
+  username: string;
   eventTitle: string;
   dateLabel: string;
   timeLabel: string;
   duration: number;
   timezone: string;
   onBack: () => void;
+  onConfirm: (data: {
+    name: string;
+    email: string;
+    notes?: string;
+  }) => Promise<void>;
 };
 
 function getEndTime(startTime: string, duration: number, use24h = false) {
@@ -25,13 +33,21 @@ function formatTime(date: Date, use24h = false) {
 }
 
 export default function BookingForm({
+  username,
   eventTitle,
   dateLabel,
   timeLabel,
   duration,
   timezone,
   onBack,
+  onConfirm
 }: Props) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-neutral-100">
       <div className="flex w-full max-w-5xl min-h-[520px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl">
@@ -61,6 +77,8 @@ export default function BookingForm({
                 type="text"
                 className="w-full h-11 rounded-md border border-neutral-800 bg-neutral-900 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
 
@@ -72,6 +90,8 @@ export default function BookingForm({
                 type="email"
                 className="w-full h-11 rounded-md border border-neutral-800 bg-neutral-900 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="john@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
@@ -83,6 +103,8 @@ export default function BookingForm({
                 rows={4}
                 className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-700"
                 placeholder="Anything to prepare beforehand?"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
               />
             </div>
           </div>
@@ -104,8 +126,28 @@ export default function BookingForm({
               Back
             </button>
 
-            <button className="rounded-lg bg-white px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-200">
-              Confirm
+            <button
+              disabled={loading}
+              onClick={async () => {
+                setError(null);
+
+                if (!name || !email) {
+                  setError("Name and email are required");
+                  return;
+                }
+
+                setLoading(true);
+                try {
+                  await onConfirm({ name, email, notes });
+                } catch (err: any) {
+                  setError(err.message ?? "Something went wrong");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="rounded-md bg-white px-6 py-2.5 text-sm font-medium text-black hover:bg-neutral-200 disabled:opacity-60"
+            >
+              {loading ? "Booking..." : "Confirm"}
             </button>
           </div>
         </div>
