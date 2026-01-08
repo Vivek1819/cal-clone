@@ -101,3 +101,42 @@ export async function saveAvailability(data: SaveAvailabilityInput) {
     });
   }
 }
+
+export async function saveDateOverrides(
+  userId: string,
+  overrides: {
+    date: string;
+    enabled: boolean;
+    startTime: string | null;
+    endTime: string | null;
+    reason?: string | null;
+  }[]
+) {
+  await prisma.dateOverride.deleteMany({
+    where: {
+      date: { in: overrides.map((o) => o.date) },
+    },
+  });
+
+  await prisma.dateOverride.createMany({
+    data: overrides.map((o) => ({
+      date: o.date,
+      enabled: o.enabled,
+      startTime: o.startTime,
+      endTime: o.endTime,
+      reason: o.reason ?? null,
+    })),
+  });
+}
+
+export async function getDateOverrides() {
+  return prisma.dateOverride.findMany({
+    orderBy: { date: "asc" },
+  });
+}
+
+export async function deleteDateOverride(date: string) {
+  await prisma.dateOverride.delete({
+    where: { date },
+  });
+}

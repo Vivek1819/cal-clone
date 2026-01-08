@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { saveAvailability } from "./actions";
+import {
+  saveAvailability,
+  getDateOverrides,
+  saveDateOverrides,
+  deleteDateOverride
+} from "./actions";
 import { Globe, Check } from "lucide-react";
+import DateOverrideModal from "./DateOverrideModal";
 
 type Availability = {
   userId: string;
@@ -37,6 +43,15 @@ type Availability = {
   saturdayEnd: string | null;
 };
 
+type DateOverride = {
+  id: string;
+  date: string;
+  enabled: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  reason: string | null;
+};
+
 const DAYS = [
   { key: "sunday", label: "Sunday", short: "Sun" },
   { key: "monday", label: "Monday", short: "Mon" },
@@ -50,6 +65,7 @@ const DAYS = [
 type Props = {
   userId: string;
   availability: Availability | null;
+  initialOverrides: DateOverride[];
 };
 
 type SaveAvailabilityInput = Availability;
@@ -89,11 +105,17 @@ function getDefaultAvailability(userId: string): Availability {
   };
 }
 
-export default function AvailabilityClient({ userId, availability }: Props) {
+export default function AvailabilityClient({
+  userId,
+  availability,
+  initialOverrides,
+}: Props) {
   const [state, setState] = useState<SaveAvailabilityInput>(
     availability ?? getDefaultAvailability(userId)
   );
   const [saving, setSaving] = useState(false);
+  const [overrides, setOverrides] = useState<DateOverride[]>(initialOverrides);
+  const [overrideModalOpen, setOverrideModalOpen] = useState(false);
 
   function toggleDay(day: string) {
     setState((prev) => ({
@@ -115,6 +137,26 @@ export default function AvailabilityClient({ userId, availability }: Props) {
     setSaving(false);
   }
 
+  async function handleSaveOverride(payload: {
+    dates: string[];
+    enabled: boolean;
+    startTime: string | null;
+    endTime: string | null;
+  }) {
+    const newOverrides = payload.dates.map((date) => ({
+      date,
+      enabled: payload.enabled,
+      startTime: payload.startTime,
+      endTime: payload.endTime,
+    }));
+
+    await saveDateOverrides(userId, newOverrides);
+
+    const refreshed = await getDateOverrides();
+    setOverrides(refreshed);
+    setOverrideModalOpen(false);
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-10">
       {/* Header */}
@@ -123,7 +165,7 @@ export default function AvailabilityClient({ userId, availability }: Props) {
           <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-100">
             Availability
           </h1>
-          <p className="mt-2 text-xs sm:text-sm text-neutral-400">
+          <p className="mt-2 text-sm sm:text-sm text-neutral-400">
             Set your weekly hours when you're available for meetings.
           </p>
         </div>
@@ -151,7 +193,9 @@ export default function AvailabilityClient({ userId, availability }: Props) {
       <div className="mb-6 sm:mb-8 bg-neutral-900/30 border border-neutral-800/50 rounded-xl p-5 sm:p-6 backdrop-blur-sm">
         <div className="flex items-center gap-2 mb-3">
           <Globe className="w-4 h-4 text-neutral-400" />
-          <label className="text-sm font-medium text-neutral-300">Timezone</label>
+          <label className="text-sm font-medium text-neutral-300">
+            Timezone
+          </label>
         </div>
         <select
           value={state.timezone}
@@ -170,12 +214,15 @@ export default function AvailabilityClient({ userId, availability }: Props) {
       {/* Days */}
       <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/30 backdrop-blur-sm overflow-hidden">
         {DAYS.map((day) => {
-          const enabled =
-            state[`${day.key}Enabled` as keyof Availability] as boolean;
-          const start =
-            state[`${day.key}Start` as keyof Availability] as string | null;
-          const end =
-            state[`${day.key}End` as keyof Availability] as string | null;
+          const enabled = state[
+            `${day.key}Enabled` as keyof Availability
+          ] as boolean;
+          const start = state[`${day.key}Start` as keyof Availability] as
+            | string
+            | null;
+          const end = state[`${day.key}End` as keyof Availability] as
+            | string
+            | null;
 
           return (
             <div
@@ -253,9 +300,7 @@ export default function AvailabilityClient({ userId, availability }: Props) {
                   <input
                     type="time"
                     value={end ?? "17:00"}
-                    onChange={(e) =>
-                      updateTime(day.key, "End", e.target.value)
-                    }
+                    onChange={(e) => updateTime(day.key, "End", e.target.value)}
                     className="flex-1 rounded-lg border border-neutral-700/50 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-neutral-600 transition"
                   />
                 </div>
@@ -264,6 +309,66 @@ export default function AvailabilityClient({ userId, availability }: Props) {
           );
         })}
       </div>
+
+      {/* DATE OVERRIDES */}
+      <div className="mt-10 rounded-xl border border-neutral-800/50 bg-neutral-900/30 backdrop-blur-sm p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold text-neutral-100">
+              Date overrides
+            </h2>
+            <p className="text-sm text-neutral-400 mt-1">
+              Add dates when your availability changes from your daily hours.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setOverrideModalOpen(true)}
+            className="rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 transition"
+          >
+            + Add an override
+          </button>
+        </div>
+
+        {overrides.length === 0 ? (
+          <div className="text-sm text-neutral-500">No date overrides yet.</div>
+        ) : (
+          <div className="space-y-2">
+            {overrides.map((o) => (
+              <div
+                key={o.id}
+                className="flex items-center justify-between rounded-lg border border-neutral-800 px-4 py-3"
+              >
+                <div>
+                  <div className="text-sm text-neutral-100">{o.date}</div>
+                  <div className="text-xs text-neutral-400">
+                    {o.enabled
+                      ? `${o.startTime} – ${o.endTime}`
+                      : "Unavailable all day"}
+                  </div>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    await deleteDateOverride(o.date);
+                    setOverrides((prev) =>
+                      prev.filter((x) => x.date !== o.date)
+                    );
+                  }}
+                  className="text-xs text-red-400 hover:text-red-300"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <DateOverrideModal
+        open={overrideModalOpen}
+        onClose={() => setOverrideModalOpen(false)}
+        onSave={handleSaveOverride}
+      />
     </div>
   );
 }

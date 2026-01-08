@@ -18,6 +18,17 @@ export async function createBooking(input: CreateBookingInput) {
     throw new Error("Missing required booking fields");
   }
 
+    // 1️⃣ Date override check (BLOCKED DAY)
+  const override = await prisma.dateOverride.findUnique({
+    where: { date },
+  });
+
+  if (override && override.enabled === false) {
+    throw new Error("This date is unavailable for booking");
+  }
+
+  
+
   // Helper: convert "HH:MM AM/PM" → minutes since midnight
   function toMinutes(time: string) {
     const d = new Date(`1970-01-01 ${time}`);
@@ -89,4 +100,32 @@ export async function getBookedSlotsForDate(input: { date: string }) {
       },
     },
   });
+}
+
+export async function getDateAvailability(input: { date: string }) {
+  const override = await prisma.dateOverride.findUnique({
+    where: { date: input.date },
+  });
+
+  if (override && override.enabled === false) {
+    return {
+      blocked: true,
+      startTime: null,
+      endTime: null,
+    };
+  }
+
+  if (override && override.enabled === true) {
+    return {
+      blocked: false,
+      startTime: override.startTime,
+      endTime: override.endTime,
+    };
+  }
+
+  return {
+    blocked: false,
+    startTime: null,
+    endTime: null,
+  };
 }

@@ -1,12 +1,17 @@
-import { prisma } from "@/lib/prisma";
 import AvailabilityClient from "./AvailabilityClient";
+import { getAvailability, getDateOverrides } from "./actions";
 
 export default async function AvailabilityPage() {
-  const userId = "demo-user"; 
+  const userId = "username"; 
 
-  const availability = await prisma.availability.findUnique({
-    where: { userId },
-  });
+  const availability = await getAvailability(userId);
+  const overrides = await getDateOverrides();
 
-  return <AvailabilityClient availability={availability} userId={userId} />;
+  return (
+    <AvailabilityClient
+      userId={userId}
+      availability={availability}
+      initialOverrides={overrides}
+    />
+  );
 }
