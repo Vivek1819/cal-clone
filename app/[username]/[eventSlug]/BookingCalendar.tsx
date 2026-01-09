@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BookingForm from "./booking/BookingForm";
-import { createBooking, getBookedSlotsForDate } from "./booking/actions";
+import {
+  createBooking,
+  getBookedSlotsForDate,
+  getDateAvailability,
+} from "./booking/actions";
 import BookingConfirm from "./BookingConfirm";
 import { Clock, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -77,6 +81,32 @@ export default function BookingCalendar({
     }[]
   >([]);
 
+  const [dateAvailability, setDateAvailability] = useState<{
+    blocked: boolean;
+    startTime: string | null;
+    endTime: string | null;
+  } | null>(null);
+
+  const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    async function loadBlockedDates() {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth() + 1;
+
+      const res = await fetch(
+        `/api/date-overrides?year=${year}&month=${month}`
+      );
+      const data: { date: string; enabled: boolean }[] = await res.json();
+
+      setBlockedDates(
+        new Set(data.filter((d) => !d.enabled).map((d) => d.date))
+      );
+    }
+
+    loadBlockedDates();
+  }, [currentMonth]);
+
   if (bookingConfirmed && bookingDetails && selectedDate && selectedTime) {
     return (
       <BookingConfirm
@@ -141,10 +171,9 @@ export default function BookingCalendar({
     );
   }
 
-  function isDateAvailable(date: Date) {
+  function isWeeklyAvailable(date: Date) {
     const dayKey = DAY_KEY_BY_INDEX[date.getDay()];
-    const enabled = availability[`${dayKey}Enabled`];
-    return Boolean(enabled) && !isPastDate(date);
+    return Boolean(availability[`${dayKey}Enabled`]) && !isPastDate(date);
   }
 
   function getCalendarDays(month: Date) {
@@ -176,8 +205,17 @@ export default function BookingCalendar({
     if (!selectedDate) return [];
 
     const dayKey = DAY_KEY_BY_INDEX[selectedDate.getDay()];
-    const start = availability[`${dayKey}Start`];
-    const end = availability[`${dayKey}End`];
+    let start = availability[`${dayKey}Start`];
+    let end = availability[`${dayKey}End`];
+
+    if (dateAvailability?.startTime && dateAvailability?.endTime) {
+      start = dateAvailability.startTime;
+      end = dateAvailability.endTime;
+    }
+
+    if (dateAvailability && dateAvailability.blocked) {
+      return [];
+    }
 
     if (!start || !end) return [];
 
@@ -231,13 +269,19 @@ export default function BookingCalendar({
         {/* LEFT PANEL — Info section */}
         <div className="w-full lg:w-1/4 border-b lg:border-b-0 lg:border-r border-neutral-800/50 p-6 lg:p-10 space-y-6 bg-neutral-900/30">
           <div>
-            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Host</div>
+            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
+              Host
+            </div>
             <div className="text-base text-neutral-300">{username}</div>
           </div>
 
           <div>
-            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">Event Type</div>
-            <h1 className="text-xl lg:text-2xl font-semibold text-neutral-100">{eventType.title}</h1>
+            <div className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
+              Event Type
+            </div>
+            <h1 className="text-xl lg:text-2xl font-semibold text-neutral-100">
+              {eventType.title}
+            </h1>
           </div>
 
           <div className="pt-4 space-y-4 border-t border-neutral-800/50">
@@ -245,7 +289,9 @@ export default function BookingCalendar({
               <Clock className="w-5 h-5 text-neutral-400 flex-shrink-0" />
               <div>
                 <div className="text-xs text-neutral-500">Duration</div>
-                <div className="text-sm text-neutral-200">{eventType.duration} minutes</div>
+                <div className="text-sm text-neutral-200">
+                  {eventType.duration} minutes
+                </div>
               </div>
             </div>
 
@@ -253,7 +299,9 @@ export default function BookingCalendar({
               <Globe className="w-5 h-5 text-neutral-400 flex-shrink-0" />
               <div>
                 <div className="text-xs text-neutral-500">Timezone</div>
-                <div className="text-sm text-neutral-200">{availability.timezone}</div>
+                <div className="text-sm text-neutral-200">
+                  {availability.timezone}
+                </div>
               </div>
             </div>
           </div>
@@ -318,21 +366,34 @@ export default function BookingCalendar({
             {days.map((date, idx) => {
               if (!date) return <div key={idx} />;
 
-              const available = isDateAvailable(date);
+              const available = isWeeklyAvailable(date);
               const selected = selectedDate && isSameDay(selectedDate, date);
               const isToday = isSameDay(date, new Date());
+
+              const dateKey = date.toLocaleDateString("en-CA");
+              const blockedByOverride = blockedDates.has(dateKey);
 
               return (
                 <button
                   key={idx}
-                  disabled={!available}
+                  disabled={!available || blockedByOverride}
                   onClick={async () => {
+                    if (blockedByOverride) return;
                     setSelectedDate(date);
                     setSelectedTime(null);
+                    
+                    setDateAvailability(null);
+                    const availabilityForDate = await getDateAvailability({
+                      date: dateKey,
+                    });
+                    setDateAvailability(availabilityForDate);
 
-                    const dateOnly = date.toLocaleDateString("en-CA");
+                    if (availabilityForDate.blocked) {
+                      setBookedSlots([]);
+                      return;
+                    }
                     const booked = await getBookedSlotsForDate({
-                      date: dateOnly,
+                      date: dateKey,
                     });
                     setBookedSlots(booked);
                   }}
@@ -367,7 +428,9 @@ export default function BookingCalendar({
               <button
                 onClick={() => setUse24h(false)}
                 className={`px-3 py-1 text-xs transition ${
-                  !use24h ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
+                  !use24h
+                    ? "bg-neutral-700 text-white"
+                    : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 12h
@@ -375,7 +438,9 @@ export default function BookingCalendar({
               <button
                 onClick={() => setUse24h(true)}
                 className={`px-3 py-1 text-xs transition ${
-                  use24h ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
+                  use24h
+                    ? "bg-neutral-700 text-white"
+                    : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 24h
@@ -408,7 +473,13 @@ export default function BookingCalendar({
                     }
                   `}
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full ${selectedTime === slot ? "bg-emerald-500" : "bg-emerald-400"}`} />
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      selectedTime === slot
+                        ? "bg-emerald-500"
+                        : "bg-emerald-400"
+                    }`}
+                  />
                   <span className="text-sm font-medium">{slot}</span>
                 </button>
               ))}

@@ -26,10 +26,8 @@ export default function DateOverrideModal({
   onClose,
   onSave,
   editingOverride,
-  overriddenDates
+  overriddenDates,
 }: Props) {
-  if (!open) return null;
-
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [unavailable, setUnavailable] = useState(false);
@@ -89,7 +87,6 @@ export default function DateOverrideModal({
     return overriddenDates.includes(key);
   }
 
-
   function isPastDate(date: Date) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -99,7 +96,11 @@ export default function DateOverrideModal({
   const days = getCalendarDays(currentMonth);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4">
+    <div
+      className={`fixed inset-0 z-50 ${
+        open ? "flex" : "hidden"
+      } items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4`}
+    >
       <div className="w-full max-w-4xl rounded-xl bg-neutral-950/90 border border-neutral-800/50 shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[95vh] sm:max-h-[90vh]">
         {/* LEFT — Calendar */}
         <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-neutral-800/50 p-4 sm:p-5 lg:p-8 overflow-y-auto">
@@ -182,7 +183,8 @@ export default function DateOverrideModal({
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {days.map((date, idx) => {
-              if (!date) return <div key={idx} className="h-9 sm:h-10 lg:h-11" />;
+              if (!date)
+                return <div key={idx} className="h-9 sm:h-10 lg:h-11" />;
 
               const key = formatDate(date);
               const selected = selectedDates.includes(key);
@@ -238,7 +240,8 @@ export default function DateOverrideModal({
                 "Select dates from the calendar"
               ) : (
                 <span className="text-neutral-200 font-medium">
-                  {selectedDates.length} date{selectedDates.length > 1 ? "s" : ""} selected
+                  {selectedDates.length} date
+                  {selectedDates.length > 1 ? "s" : ""} selected
                 </span>
               )}
             </p>
@@ -259,7 +262,12 @@ export default function DateOverrideModal({
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <div>
