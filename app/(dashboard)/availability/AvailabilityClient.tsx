@@ -5,9 +5,9 @@ import {
   saveAvailability,
   getDateOverrides,
   saveDateOverrides,
-  deleteDateOverride
+  deleteDateOverride,
 } from "./actions";
-import { Globe, Check } from "lucide-react";
+import { Globe, Check, Edit, Edit2, Edit3, Edit2Icon, Delete, DeleteIcon, RemoveFormatting, Trash, Trash2 } from "lucide-react";
 import DateOverrideModal from "./DateOverrideModal";
 
 type Availability = {
@@ -116,6 +116,9 @@ export default function AvailabilityClient({
   const [saving, setSaving] = useState(false);
   const [overrides, setOverrides] = useState<DateOverride[]>(initialOverrides);
   const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+  const [editingOverride, setEditingOverride] = useState<DateOverride | null>(
+    null
+  );
 
   function toggleDay(day: string) {
     setState((prev) => ({
@@ -236,12 +239,12 @@ export default function AvailabilityClient({
                   <button
                     onClick={() => toggleDay(day.key)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${
-                      enabled ? "bg-emerald-500" : "bg-neutral-700"
+                      enabled ? "bg-white" : "bg-neutral-700"
                     }`}
                     aria-label={`Toggle ${day.label}`}
                   >
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
+                      className={`inline-block h-5 w-5 transform rounded-full bg-black transition-transform shadow-sm ${
                         enabled ? "translate-x-5.5" : "translate-x-0.5"
                       }`}
                     />
@@ -310,62 +313,150 @@ export default function AvailabilityClient({
         })}
       </div>
 
-      {/* DATE OVERRIDES */}
-      <div className="mt-10 rounded-xl border border-neutral-800/50 bg-neutral-900/30 backdrop-blur-sm p-5 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* DATE OVERRIDES - IMPROVED UI */}
+      <div className="mt-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-base font-semibold text-neutral-100">
-              Date overrides
+            <h2 className="text-lg sm:text-xl font-semibold text-neutral-100">
+              Date Overrides
             </h2>
             <p className="text-sm text-neutral-400 mt-1">
-              Add dates when your availability changes from your daily hours.
+              Override your regular availability for specific dates
             </p>
           </div>
 
           <button
-            onClick={() => setOverrideModalOpen(true)}
-            className="rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 transition"
+            onClick={() => {
+              setEditingOverride(null);
+              setOverrideModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 px-4 py-2.5 text-sm font-medium text-neutral-200 hover:bg-neutral-700/50 hover:border-neutral-600 transition w-full sm:w-auto"
           >
-            + Add an override
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add Override</span>
           </button>
         </div>
 
-        {overrides.length === 0 ? (
-          <div className="text-sm text-neutral-500">No date overrides yet.</div>
-        ) : (
-          <div className="space-y-2">
-            {overrides.map((o) => (
-              <div
-                key={o.id}
-                className="flex items-center justify-between rounded-lg border border-neutral-800 px-4 py-3"
-              >
-                <div>
-                  <div className="text-sm text-neutral-100">{o.date}</div>
-                  <div className="text-xs text-neutral-400">
-                    {o.enabled
-                      ? `${o.startTime} – ${o.endTime}`
-                      : "Unavailable all day"}
-                  </div>
-                </div>
-
-                <button
-                  onClick={async () => {
-                    await deleteDateOverride(o.date);
-                    setOverrides((prev) =>
-                      prev.filter((x) => x.date !== o.date)
-                    );
-                  }}
-                  className="text-xs text-red-400 hover:text-red-300"
-                >
-                  Remove
-                </button>
+        <div className="rounded-xl border border-neutral-800/50 bg-neutral-900/30 backdrop-blur-sm overflow-hidden">
+          {overrides.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-neutral-800/50 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </div>
-            ))}
-          </div>
-        )}
+              <h3 className="text-sm font-medium text-neutral-300 mb-2">
+                No date overrides
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-sm mb-6">
+                Add specific dates when your availability differs from your regular schedule
+              </p>
+              <button
+                onClick={() => {
+                  setEditingOverride(null);
+                  setOverrideModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-100 transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Your First Override</span>
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-800/50">
+              {overrides.map((o) => {
+                const dateObj = new Date(o.date + "T00:00:00");
+                const formattedDate = dateObj.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
+
+                return (
+                  <div
+                    key={o.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 hover:bg-neutral-800/20 transition group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        o.enabled 
+                          ? "bg-white/10 border border-white/20" 
+                          : "bg-white/10 border border-white/20"
+                      }`}>
+                        <svg className={`w-5 h-5 ${o.enabled ? "text-white" : "text-white"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {o.enabled ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                          )}
+                        </svg>
+                      </div>
+
+                      <div>
+                        <div className="text-sm font-medium text-neutral-100">
+                          {formattedDate}
+                        </div>
+                        <div className="text-xs text-neutral-400 mt-1 flex items-center gap-1.5">
+                          {o.enabled ? (
+                            <>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>{o.startTime} – {o.endTime}</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                              <span>Unavailable all day</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-14 sm:ml-0">
+                      <button
+                        onClick={() => {
+                          setEditingOverride(o);
+                          setOverrideModalOpen(true);
+                        }}
+                        className="cursor-pointer rounded-lg border border-neutral-700/50 bg-neutral-800/30 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-700/50 hover:border-neutral-600 transition"
+                      >
+                        <Edit2Icon size={16} />
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          if (!confirm("Remove this date override?")) return;
+                          await deleteDateOverride(o.date);
+                          setOverrides((prev) =>
+                            prev.filter((x) => x.date !== o.date)
+                          );
+                        }}
+                        className="cursor-pointer rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-900/40 hover:border-red-800 transition"
+                      >
+                        <Trash2 size={18}/>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
       <DateOverrideModal
         open={overrideModalOpen}
+        editingOverride={editingOverride}
+        overriddenDates={overrides.map((o) => o.date)}
         onClose={() => setOverrideModalOpen(false)}
         onSave={handleSaveOverride}
       />
